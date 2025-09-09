@@ -1,0 +1,34 @@
+name: AI PR Review
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}-pr
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run CodeRabbit AI Review
+        uses: coderabbitai/ai-pr-reviewer@latest
+        with:
+          debug: true
+          review_simple_changes: false
+          review_comment_lgtm: false
+          openai_light_model: gpt-3.5-turbo    # valid input
+          openai_heavy_model: gpt-4            # optional, if available
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
